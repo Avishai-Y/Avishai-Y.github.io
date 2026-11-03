@@ -6,6 +6,11 @@ enableRobotsTXT = true
 enableEmoji = true
 pygmentsUseClasses = true
 
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
 [params]
   env = "production"
   title = "我的博客"

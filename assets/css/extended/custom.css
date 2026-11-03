@@ -6,7 +6,7 @@
   height: 100%;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.85;
 }
 .header,
 .main,
@@ -18,39 +18,52 @@
 /* ============ 首页打字机欢迎语 ============ */
 #hero {
   text-align: center;
-  padding: 2rem 0 1rem;
+  padding: 2.6rem 0 1.4rem;
 }
 #typed {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--primary);
-  min-height: 2.2rem;
-  letter-spacing: 0.5px;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  min-height: 2.6rem;
+  background: linear-gradient(90deg, #4f46e5, #0ea5e9, #4f46e5);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 5s ease infinite;
+}
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 #typed::after {
   content: "|";
-  margin-left: 2px;
+  margin-left: 3px;
+  -webkit-text-fill-color: var(--secondary);
   color: var(--secondary);
-  animation: blink 1s steps(1) infinite;
+  animation: blink 0.9s steps(1) infinite;
 }
 @keyframes blink {
   50% { opacity: 0; }
 }
 
 /* ============ 文章卡片滚动动画 ============ */
-.js-ready .post-entry {
+.js-ready .post-entry,
+.js-ready .first-entry {
   opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.55s ease, transform 0.55s ease;
+  transform: translateY(18px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
-.js-ready .post-entry.visible {
+.js-ready .post-entry.visible,
+.js-ready .first-entry.visible {
   opacity: 1;
   transform: none;
 }
 
 /* 用户系统开启"减少动态效果"时，全部禁用动画 */
 @media (prefers-reduced-motion: reduce) {
-  .js-ready .post-entry {
+  .js-ready .post-entry,
+  .js-ready .first-entry {
     opacity: 1;
     transform: none;
     transition: none;
