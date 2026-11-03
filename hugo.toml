@@ -1,0 +1,44 @@
+baseURL = "https://Avishai-Y.github.io/"
+languageCode = "zh-cn"
+title = "我的博客"
+theme = "PaperMod"
+enableRobotsTXT = true
+enableEmoji = true
+pygmentsUseClasses = true
+
+[params]
+  env = "production"
+  title = "我的博客"
+  description = "记录学习、生活与思考的个人博客"
+  author = "Avishai"
+  DateFormat = "2006-01-02"
+  defaultTheme = "auto"
+  ShowReadingTime = true
+  ShowWordCount = true
+  ShowCodeCopyButtons = true
+  ShowBreadCrumbs = true
+  ShowToc = true
+  ShowPostNavLinks = true
+  ShowShareButtons = false
+  comments = false
+
+[[menu.main]]
+    identifier = "home"
+    name = "首页"
+    url = "/"
+    weight = 1
+  [[menu.main]]
+    identifier = "archives"
+    name = "归档"
+    url = "/archives/"
+    weight = 2
+  [[menu.main]]
+    identifier = "search"
+    name = "搜索"
+    url = "/search/"
+    weight = 3
+  [[menu.main]]
+    identifier = "about"
+    name = "关于"
+    url = "/about/"
+    weight = 4
