@@ -1,0 +1,61 @@
+/* ============ 动态效果：粒子星空背景 ============ */
+#particles-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.header,
+.main,
+.footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============ 首页打字机欢迎语 ============ */
+#hero {
+  text-align: center;
+  padding: 2rem 0 1rem;
+}
+#typed {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary);
+  min-height: 2.2rem;
+  letter-spacing: 0.5px;
+}
+#typed::after {
+  content: "|";
+  margin-left: 2px;
+  color: var(--secondary);
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ============ 文章卡片滚动动画 ============ */
+.js-ready .post-entry {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.js-ready .post-entry.visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* 用户系统开启"减少动态效果"时，全部禁用动画 */
+@media (prefers-reduced-motion: reduce) {
+  .js-ready .post-entry {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  #typed::after {
+    animation: none;
+  }
+}
