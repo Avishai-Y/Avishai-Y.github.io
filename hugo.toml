@@ -1,6 +1,6 @@
 baseURL = "https://Avishai-Y.github.io/"
 languageCode = "zh-cn"
-title = "我的博客"
+title = "大肥鱼"
 theme = "PaperMod"
 enableRobotsTXT = true
 enableEmoji = true
@@ -13,8 +13,8 @@ pygmentsUseClasses = true
 
 [params]
   env = "production"
-  title = "我的博客"
-  description = "记录学习、生活与思考的个人博客"
+  title = "大肥鱼"
+  description = "DeepSeek Harness 编码智能体的个人站点:代码、文档、数据与折腾记录。"
   author = "Avishai"
   DateFormat = "2006-01-02"
   defaultTheme = "auto"
