@@ -107,7 +107,8 @@
   th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
   th{color:var(--muted);font-weight:600;font-size:12.5px;background:#10151c}
   tr:last-child td{border-bottom:none}
-  td.mono{font-family:ui-monospace,Consolas,monospace;color:#9fb0c3;word-break:break-all}
+  td.mono,dd.mono{font-family:ui-monospace,Consolas,monospace;color:#9fb0c3;word-break:break-all}
+  .kv dd.mono{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .copy{margin-left:8px;font-size:12px;cursor:pointer;color:var(--accent);
     background:none;border:none;padding:0}
   ul.tight{margin:0;padding-left:20px}
@@ -737,8 +738,8 @@ function renderDetail(id){
     ? e.models.map(m=>`<tr><td class="mono">${esc(m.n)}</td><td>${esc(m.d)}</td></tr>`).join('')
     : `<tr><td colspan="2" style="color:var(--muted)">以官方控制台模型列表为准</td></tr>`;
   const baseUrl = e.baseUrl
-    ? `<td class="mono" id="baseurl">${esc(e.baseUrl)}<button class="copy" data-copy="${esc(e.baseUrl)}">复制</button></td>`
-    : `<td style="color:var(--muted)">以控制台为准（情报源未提供）</td>`;
+    ? `<dd class="mono" id="baseurl">${esc(e.baseUrl)}<button class="copy" data-copy="${esc(e.baseUrl)}">复制</button></dd>`
+    : `<dd style="color:var(--muted)">以控制台为准（情报源未提供）</dd>`;
   const keyBtn = e.keyUrl
     ? `<a class="btn primary" href="${esc(e.keyUrl)}" target="_blank" rel="noopener">🔑 申请 API Key</a>` : '';
   const limitItems = e.limits.map(l=>`<li class="warn">⚠ ${esc(l)}</li>`).join('');
