@@ -47,3 +47,8 @@ pygmentsUseClasses = true
     name = "关于"
     url = "/about/"
     weight = 4
+  [[menu.main]]
+    identifier = "freetokens"
+    name = "免费Tokens"
+    url = "/free-tokens.html"
+    weight = 5

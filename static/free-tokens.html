@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>免费 Tokens 猎手 · 国内 API 白嫖额度查询</title>
+<style>
+  :root{
+    --bg:#0d1117; --card:#161b22; --card-hover:#1c2129; --line:#30363d;
+    --fg:#e6edf3; --muted:#8b949e; --accent:#58a6ff;
+    --green:#3fb950; --orange:#d29922; --purple:#bc8cff; --red:#f85149; --cyan:#39c5cf;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+    line-height:1.65;}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+
+  /* header */
+  header{padding:28px 0 12px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#131a24 0%,#0d1117 100%);}
+  h1{margin:0 0 4px;font-size:26px;letter-spacing:.5px}
+  h1 .logo{margin-right:8px}
+  .sub{color:var(--muted);font-size:14px}
+  .stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:8px 14px;min-width:130px}
+  .stat b{display:block;font-size:20px;color:var(--green);font-variant-numeric:tabular-nums}
+  .stat span{font-size:12px;color:var(--muted)}
+
+  /* status bar */
+  .statusbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    margin:16px 0 0;padding:10px 14px;background:#12171f;
+    border:1px solid var(--line);border-radius:10px;font-size:13px;color:var(--muted)}
+  .statusbar .dot{width:8px;height:8px;border-radius:50%;background:var(--orange);flex:none}
+  .statusbar.ok .dot{background:var(--green)}
+  .statusbar.err .dot{background:var(--red)}
+  .statusbar.loading .dot{background:var(--cyan);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  button{font-family:inherit}
+  .btn{display:inline-block;background:#21262d;border:1px solid var(--line);
+    color:var(--fg);padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;
+    transition:.15s;white-space:nowrap}
+  .btn:hover{background:#30363d;border-color:#484f58;text-decoration:none}
+  .btn.primary{background:#1f6feb;border-color:#1f6feb}
+  .btn.primary:hover{background:#388bfd}
+  .btn.ghost{background:transparent}
+
+  /* toolbar */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0 6px}
+  .search{flex:1;min-width:220px;background:var(--card);border:1px solid var(--line);
+    color:var(--fg);padding:9px 14px;border-radius:10px;font-size:14px;outline:none}
+  .search:focus{border-color:var(--accent)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+  .chip{background:var(--card);border:1px solid var(--line);color:var(--muted);
+    padding:4px 12px;border-radius:999px;font-size:13px;cursor:pointer;user-select:none}
+  .chip:hover{border-color:#484f58;color:var(--fg)}
+  .chip.on{background:#1f6feb22;border-color:var(--accent);color:var(--accent)}
+  .sep{width:1px;height:20px;background:var(--line)}
+
+  /* grid & cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:14px;margin:14px 0 30px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 16px 14px;display:flex;flex-direction:column;gap:10px;transition:.15s}
+  .card:hover{background:var(--card-hover);border-color:#3d444d;transform:translateY(-2px)}
+  .card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card-top .name{font-size:16px;font-weight:700}
+  .badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid;white-space:nowrap}
+  .b-free{color:var(--green);border-color:#3fb95055;background:#3fb95015}
+  .b-once{color:var(--accent);border-color:#58a6ff55;background:#58a6ff15}
+  .b-daily{color:var(--purple);border-color:#bc8cff55;background:#bc8cff15}
+  .b-limited{color:var(--orange);border-color:#d2992255;background:#d2992215}
+  .b-unknown{color:var(--muted);border-color:#8b949e55;background:#8b949e15}
+  .b-region{color:var(--cyan);border-color:#39c5cf55;background:#39c5cf15}
+  .quota{font-size:14px;color:#c9d1d9}
+  .quota .big{display:block;font-size:19px;font-weight:700;color:var(--green);
+    font-variant-numeric:tabular-nums;margin-bottom:2px}
+  .models{display:flex;gap:6px;flex-wrap:wrap}
+  .m{font-size:11.5px;background:#0d1117;border:1px solid var(--line);
+    color:#9fb0c3;padding:2px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace}
+  .m.more{color:var(--muted);border-style:dashed}
+  .expiry{font-size:12px;color:var(--muted)}
+  .expiry b{color:var(--orange);font-weight:600}
+  .actions{display:flex;gap:8px;margin-top:auto;padding-top:4px}
+  .actions .btn{flex:1;text-align:center}
+  .online-flag{font-size:11px;color:var(--green)}
+
+  /* detail view */
+  #detail{display:none;margin:18px 0 40px}
+  #detail.show{display:block}
+  #list.hide{display:none}
+  .d-head{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .d-head h2{margin:0 0 6px;font-size:24px}
+  .d-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .d-quota{font-size:15px;color:#c9d1d9}
+  .d-quota b{color:var(--green)}
+  .d-actions{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto}
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;margin-top:14px}
+  .sec h3{margin:0 0 12px;font-size:15px;color:var(--accent);
+    display:flex;align-items:center;gap:8px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12.5px;background:#10151c}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:ui-monospace,Consolas,monospace;color:#9fb0c3;word-break:break-all}
+  .copy{margin-left:8px;font-size:12px;cursor:pointer;color:var(--accent);
+    background:none;border:none;padding:0}
+  ul.tight{margin:0;padding-left:20px}
+  ul.tight li{margin:5px 0;font-size:13.5px;color:#c9d1d9}
+  ul.tight li.warn{color:#e3b341}
+  .kv{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;font-size:13.5px}
+  .kv dt{color:var(--muted)} .kv dd{margin:0;color:#c9d1d9}
+  .srcs{display:flex;gap:8px;flex-wrap:wrap}
+  .srcs a{font-size:12.5px;background:#0d1117;border:1px solid var(--line);
+    padding:4px 10px;border-radius:8px}
+  .verify{font-size:12.5px;color:var(--muted);margin-top:10px;padding-top:10px;
+    border-top:1px dashed var(--line)}
+  .verify b.ok{color:var(--green)} .verify b.no{color:var(--orange)}
+  .empty{padding:50px 10px;text-align:center;color:var(--muted)}
+
+  footer{border-top:1px solid var(--line);padding:18px 0 34px;color:var(--muted);font-size:12.5px}
+  footer p{margin:6px 0}
+  @media (max-width:640px){
+    .d-actions{margin-left:0;width:100%}
+    .kv{grid-template-columns:1fr}
+    .kv dt{margin-top:6px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div style="margin-bottom:8px"><a href="/" style="color:var(--muted);font-size:13px">← 返回博客首页</a></div>
+    <h1><span class="logo">🎁</span>免费 Tokens 猎手</h1>
+    <div class="sub">国内支持 API 的免费大模型额度查询 · 标注模型 / 可用 tokens / 有效期 / 官网直达 · 点击卡片看详情</div>
+    <div class="stats" id="stats"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="statusbar loading" id="statusbar">
+    <span class="dot"></span>
+    <span id="status-text">正在联网查询最新免费额度…</span>
+    <button class="btn" id="refresh-btn" style="margin-left:auto">🔄 联网查询</button>
+  </div>
+
+  <div class="toolbar">
+    <input class="search" id="search" placeholder="搜索平台 / 模型，如：智谱、glm、qwen、免费…">
+  </div>
+  <div class="chips" id="type-chips"></div>
+  <div class="chips" id="region-chips" style="margin-top:0"></div>
+
+  <main id="list">
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none">没有匹配的平台，换个关键词试试～</div>
+  </main>
+
+  <main id="detail"></main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>⚠️ 免费政策随时变化（缩水、下线、改按量计费都很常见），注册 / 开通前请务必点进「官网」复核当日规则；大多数平台会要求手机号实名认证。</p>
+    <p>🔒 防扣费：免费额度用尽后多数会自动转按量付费，建议在控制台开启「额度用尽即停 / 安心体验模式」并设置预算告警；API Key 勿提交到公开仓库。</p>
+    <p>📡 数据来源：内置数据整理自 ai-tokens.cn 免费 Token 全景（2026-11-10 核验）、free-llm-intel 每日巡检等开源情报；联网查询会实时拉取 <a href="https://github.com/Tkkdy/Free-AI-API-List" target="_blank">Free-AI-API-List</a>（CC0 机器可读 JSON）与 <a href="https://github.com/rockbenben/free-llm-intel" target="_blank">free-llm-intel</a> 的最新数据。</p>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   内置数据（2026-11-22 整理，来源见页脚）
+   type: 永久免费 | 新人额度 | 每日重置 | 限时·活动 | 待核实
+   ========================================================= */
+const SEED = [
+{
+  id:'bigmodel', name:'智谱 GLM 开放平台', region:'国内', type:'永久免费',
+  site:'https://open.bigmodel.cn',
+  quota:'Flash 系列官方定价 0 元、永久不限量；新用户注册再送 2000 万 tokens',
+  big:'永久免费不限量', expiry:'永久（限速）', onceTokens:20000000, dailyTokens:0,
+  models:[
+    {n:'glm-4.7-flash', d:'200K 上下文，输入/输出/缓存全免费，代码增强'},
+    {n:'glm-4-flash-250414', d:'128K 上下文，老牌稳定款，永久免费'},
+    {n:'glm-4.6v-flash', d:'视觉多模态，输入输出均免费'},
+    {n:'glm-4v-flash', d:'轻量多模态，16K，免费'},
+    {n:'glm-4.5-flash', d:'免费，但官方标注即将下线，别做长期依赖'},
+    {n:'CogView-3-Flash', d:'文生图免费'},
+    {n:'CogVideoX-Flash', d:'文生视频免费（4K/60fps，最长 10 秒）'}
+  ],
+  baseUrl:'https://open.bigmodel.cn/api/paas/v4',
+  keyUrl:'https://bigmodel.cn/usercenter/apikeys',
+  claim:'手机号注册 → API Key 自动生成 → 2000 万 tokens 在「额度中心」自动到账，全程无需充值。',
+  limits:[
+    'GLM-5.x 旗舰系列是付费型号，接 API 请填 glm-4-flash / glm-4.7-flash，别选错',
+    '限速约 3 次/秒（个人一般碰不到）；免费模型名单会换代，以定价页为准'
+  ],
+  sources:[
+    {label:'定价页', url:'https://open.bigmodel.cn/pricing'},
+    {label:'开放平台', url:'https://open.bigmodel.cn/'}
+  ],
+  checked:'2026-11-10'
+},
+{
+  id:'aliyun', name:'阿里云百炼（通义千问）', region:'国内', type:'新人额度',
+  site:'https://bailian.console.aliyun.com',
+  quota:'新用户合计超 7000 万 tokens：130+ 模型每模型各 100 万，90 天有效',
+  big:'≈7000 万 / 90 天', expiry:'90 天（从开通日起算）', onceTokens:70000000, dailyTokens:0,
+  models:[
+    {n:'qwen3.8-max / qwen-max', d:'旗舰，每模型 100 万 tokens'},
+    {n:'qwen-plus / qwen-turbo', d:'每模型 100 万 tokens'},
+    {n:'qwen3-coder 系列', d:'代码模型，独立额度'},
+    {n:'qwen-vl / qwen-omni 等', d:'多模态，独立额度（以权益页为准）'}
+  ],
+  baseUrl:'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  keyUrl:'https://bailian.console.aliyun.com/?apiKey=1',
+  claim:'首次开通百炼后自动发放（约 2 小时内生效），无需手动领取；用完转按量付费才需实名。',
+  limits:[
+    '每模型额度互不通用、不自动切换；快照版本与最新版算两个模型、各自独立',
+    '额度 90 天过期作废不补发，同一实名主体重新注册不能重领',
+    '记得在权益页手动开启「免费额度用尽即停」，否则超量会自动扣费',
+    '地域以控制台实际显示为准（官方文档存在北京 / 新加坡两种表述）'
+  ],
+  sources:[
+    {label:'新人免费额度', url:'https://www.alibabacloud.com/help/zh/model-studio/new-free-quota'},
+    {label:'OpenAI 兼容接入', url:'https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope'}
+  ],
+  checked:'2026-11-10'
+},
+{
+  id:'ark', name:'火山方舟（豆包）', region:'国内', type:'每日重置',
+  site:'https://www.volcengine.com/product/ark',
+  quota:'每模型 50 万 tokens 安心体验 + 每日最高 200 万自动刷新（单日免费量最大的一家）',
+  big:'每日最高 200 万', expiry:'长期（按日刷新，不累积）', onceTokens:500000, dailyTokens:2000000,
+  models:[
+    {n:'Doubao-Seed-2.0-Pro', d:'旗舰，免费覆盖'},
+    {n:'Doubao-Seed-2.0-Flash', d:'快省，免费覆盖'},
+    {n:'Doubao-1.5-Pro / 1.5-Flash', d:'上一代，免费覆盖'}
+  ],
+  baseUrl:'https://ark.cn-beijing.volces.com/api/v3',
+  keyUrl:'https://console.volcengine.com/ark/management/apikey',
+  claim:'注册后必须到控制台「开通管理」手动开通模型，否则 API 直接调不通；建议同时开启「安心体验模式」。',
+  limits:[
+    '每日额度 0 点重置、用不完不累积',
+    '未手动开通模型会返回错误码；安心体验模式超限即停，防止自动转按量扣费',
+    '新用户另有代金券活动，以控制台券面为准'
+  ],
+  sources:[
+    {label:'免费推理额度', url:'https://docs.volcengine.com/docs/ark/free-inference-quota?lang=zh'},
+    {label:'安心体验模式', url:'https://ark.volcengine.com/ark/region:cn-beijing/docs/free-tokens-only-mode'}
+  ],
+  checked:'2026-11-10'
+},
+{
+  id:'siliconflow', name:'硅基流动 SiliconFlow', region:'国内', type:'新人额度',
+  site:'https://cloud.siliconflow.cn',
+  quota:'新用户 2000 万 tokens（实名后到账、永久有效）；工具类模型长期 0 元',
+  big:'2000 万（永久有效）', expiry:'新人额度永久；0 元模型长期', onceTokens:20000000, dailyTokens:0,
+  models:[
+    {n:'bge-m3 / bge-reranker', d:'向量 / 重排，0 元'},
+    {n:'PaddleOCR-VL-1.5', d:'OCR 识别，0 元'},
+    {n:'Kolors', d:'文生图，0 元'},
+    {n:'SenseVoice / 星辰 ASR', d:'语音识别，0 元'},
+    {n:'Xing4.0-29B / Hunyuan-MT', d:'对话小模型（免费已取消，以定价页为准）'}
+  ],
+  baseUrl:'https://api.siliconflow.cn/v1',
+  keyUrl:'https://cloud.siliconflow.cn/account/ak',
+  claim:'注册 → 完成实名认证 → 2000 万 tokens 到账 → 在模型列表选 0 元模型创建 Key。',
+  limits:[
+    '「9B 以下对话模型永久免费」政策已取消，长期 0 元的只剩 embedding / OCR / 语音 / 生图类',
+    '国内站与国际站规则不同，别照搬',
+    '聚合平台：一个 Key 可调 50+ 开源模型，适合配 one-api 统一管理'
+  ],
+  sources:[
+    {label:'国内云', url:'https://cloud.siliconflow.cn/'},
+    {label:'限流说明', url:'https://api-docs.siliconflow.cn/docs/userguide/faqs/rate-limit-and-upgradation'}
+  ],
+  checked:'2026-11-10'
+},
+{
+  id:'deepseek', name:'DeepSeek 开放平台', region:'国内', type:'新人额度',
+  site:'https://www.deepseek.com',
+  quota:'新用户 300 万 tokens（30 天）；定价本身极低，用完也只要几毛钱/百万',
+  big:'300 万 / 30 天', expiry:'30 天', onceTokens:3000000, dailyTokens:0,
+  models:[
+    {n:'deepseek-chat', d:'通用对话（V4 系列），新人额度抵扣'},
+    {n:'deepseek-reasoner', d:'推理模型，新人额度抵扣'}
+  ],
+  baseUrl:'https://api.deepseek.com/v1',
+  keyUrl:'https://platform.deepseek.com/api_keys',
+  claim:'手机号 / 邮箱注册 → 创建 API Key → 30 天内用完赠送额度。',
+  limits:['30 天过期；年初还是 500 万，已缩水到 300 万，政策可能继续变'],
+  sources:[{label:'开放平台', url:'https://platform.deepseek.com/'}],
+  checked:'2026-11-10'
+},
+{
+  id:'baidu', name:'百度千帆（文心 ERNIE）', region:'国内', type:'永久免费',
+  site:'https://cloud.baidu.com/product/qianfan',
+  quota:'ERNIE-Speed / Lite / Tiny 按量价格 0 元、永久免费；新用户 17 个模型各 100 万 / 3 个月',
+  big:'永久 0 元 + 1700 万赠额', expiry:'免费模型永久；赠额 3 个月', onceTokens:17000000, dailyTokens:0,
+  models:[
+    {n:'ERNIE-Speed', d:'按量价格 0，永久免费，需实名'},
+    {n:'ERNIE-Lite', d:'按量价格 0，永久免费'},
+    {n:'ERNIE-Tiny', d:'按量价格 0，主打低延迟'},
+    {n:'ERNIE-4.5-Turbo-128K 等 17 款', d:'新人各 100 万 tokens / 3 个月'}
+  ],
+  baseUrl:'https://qianfan.baidubce.com/v2',
+  keyUrl:'https://console.bce.baidu.com/qianfan/overview',
+  claim:'完成实名认证 → 开通免费模型直接调用；新人赠额在控制台权益页领取。',
+  limits:[
+    '免费模型 QPS=50，够个人用',
+    'ERNIE 3.5-8K 免费口径存在冲突（两处官方说法打架），不建议依赖',
+    '不要沿用网上已退役的旧模型名称'
+  ],
+  sources:[
+    {label:'新用户免费额度', url:'https://cloud.baidu.com/doc/qianfan/s/Imi2rpirg'},
+    {label:'OpenAI 兼容', url:'https://cloud.baidu.com/doc/qianfan/s/Hmh4suq26'}
+  ],
+  checked:'2026-11-10'
+},
+{
+  id:'spark', name:'讯飞星火 Spark', region:'国内', type:'永久免费',
+  site:'https://xinghuo.xfyun.cn',
+  quota:'Spark Lite 永久免费不限量；Spark-X2.5-1.7B 免费、4B 限时免费（产品页领取）',
+  big:'永久免费不限量', expiry:'永久（QPS 限速）', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'lite', d:'Spark Lite，永久免费不限量，QPS=2'},
+    {n:'Spark-X2.5-1.7B', d:'官方标明免费'},
+    {n:'Spark-X2.5-4B', d:'限时免费，调用前确认状态'}
+  ],
+  baseUrl:'https://spark-api-open.xf-yun.com/v1',
+  keyUrl:'https://console.xfyun.cn/services/sparkapi',
+  claim:'注册讯飞开放平台 → 开通 Spark Lite → 获取 HTTP 服务的 APIPassword（与其他 SDK 凭据可能不同）。',
+  limits:['QPS=2 限速明显，只适合轻量调用；教育 / 办公中文理解较强'],
+  sources:[
+    {label:'HTTP 调用文档', url:'https://www.xfyun.cn/doc/spark/HTTP%E8%B0%83%E7%94%A8%E6%96%87%E6%A1%A3.html'},
+    {label:'产品页', url:'https://xhspdup.xfyun.cn/sparkapi'}
+  ],
+  checked:'2026-11-10'
+},
+{
+  id:'hunyuan', name:'腾讯混元 TokenHub', region:'国内', type:'永久免费',
+  site:'https://cloud.tencent.com/product/hunyuan',
+  quota:'混元-Lite 永久免费；另赠 8 款模型共享 100 万 tokens 资源包（1 年）+ Embedding 100 万',
+  big:'Lite 永久免费 + 100 万资源包', expiry:'Lite 永久；资源包 1 年', onceTokens:1000000, dailyTokens:0,
+  models:[
+    {n:'hunyuan-lite', d:'永久免费，256K 上下文'},
+    {n:'hunyuan-turbos 等 8 款', d:'共享 100 万 tokens 资源包 / 1 年'},
+    {n:'embedding', d:'另赠 100 万'}
+  ],
+  baseUrl:'https://api.hunyuan.cloud.tencent.com/v1',
+  keyUrl:'https://console.cloud.tencent.com/hunyuan/api-key',
+  claim:'控制台开通混元 → 领取资源包 → 创建 API Key；默认耗尽后不自动转后付费（需手动开启）。',
+  limits:['HY 2.0 系列已暂停免费额度；与微信 / 企业微信生态绑定较深'],
+  sources:[{label:'腾讯混元', url:'https://cloud.tencent.com/product/hunyuan'}],
+  checked:'2026-11-10'
+},
+{
+  id:'kimi', name:'Kimi 开放平台（月之暗面）', region:'国内', type:'新人额度',
+  site:'https://www.kimi.com',
+  quota:'实名认证送 15 元代金券，可抵扣 K3 / K3.1 Pro 等模型的 API 调用',
+  big:'15 元代金券', expiry:'以券面为准', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'kimi-k3.1-pro', d:'旗舰，代金券可抵'},
+    {n:'kimi-k3 / kimi-k2.7-code', d:'长上下文 / 代码，可抵'},
+    {n:'kimi-k2.6', d:'可抵'}
+  ],
+  baseUrl:'https://api.moonshot.cn/v1',
+  keyUrl:'https://platform.kimi.com/console/api-keys',
+  claim:'注册 → 完成实名认证 → 代金券自动到账 → 创建 API Key。',
+  limits:['代金券不可用于高速版；1M 长上下文消耗非常快，省着点用'],
+  sources:[{label:'Kimi 平台', url:'https://platform.kimi.com/'}],
+  checked:'2026-11-22'
+},
+{
+  id:'qiniu', name:'七牛云 AI 大模型广场（Conatus）', region:'国内', type:'新人额度',
+  site:'https://www.qiniu.com',
+  quota:'首个 API Key 激活 300 万 tokens 资源包（2 年有效）；1024 活动期实名每日 1 亿 tokens',
+  big:'300 万 / 2 年（活动日 1 亿）', expiry:'资源包 2 年；每日额度至 2026-11-30', onceTokens:3000000, dailyTokens:100000000,
+  models:[
+    {n:'qiniu/conatus-free', d:'平台免费模型'},
+    {n:'Claude / GPT / DeepSeek / Qwen / Kimi / GLM / MiniMax', d:'聚合多家，OpenAI 与 Anthropic 双协议'}
+  ],
+  baseUrl:'https://api.qnaigc.com/v1',
+  keyUrl:'https://portal.qiniu.com/',
+  claim:'实名注册七牛云 → 创建第一个 API Key 即激活 300 万资源包；活动期（至 2026-11-30）另有每日 1 亿 tokens。',
+  limits:['一次性赠额、非永久；邀请 / 企业认证另有额度，以官网当日为准'],
+  sources:[{label:'七牛云控制台', url:'https://portal.qiniu.com/'}],
+  checked:'2026-11-22'
+},
+{
+  id:'modelscope', name:'ModelScope 魔搭社区', region:'国内', type:'每日重置',
+  site:'https://www.modelscope.cn',
+  quota:'API-Inference 共享池约 2000 次/天（北京时间 0 点重置，魔粒制按次扣减）',
+  big:'≈2000 次 / 天', expiry:'长期（按日重置）', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'Qwen/Qwen3.5-35B-A3B', d:'模型 id 必须带组织前缀'},
+    {n:'Qwen/Qwen2.5-Coder-32B-Instruct', d:'代码模型'},
+    {n:'其它开源模型', d:'名单会轮换，以模型页是否标 API-Inference 为准'}
+  ],
+  baseUrl:'https://api-inference.modelscope.cn/v1',
+  keyUrl:'https://modelscope.cn/my/myaccesstoken',
+  claim:'注册魔搭 → 绑定已实名的阿里云账号 → 用 ms- 开头的 Access Token 调用。',
+  limits:[
+    '按次扣减（0.5 / 1 / 2 魔粒），单模型常见 ≤500 次/天，超额返回 429',
+    '官方明确「请勿用于需要高并发及 SLA 保障的线上任务」'
+  ],
+  sources:[
+    {label:'社区', url:'https://www.modelscope.cn/'},
+    {label:'API-Inference 文档', url:'https://www.modelscope.cn/docs/model-service/API-Inference'}
+  ],
+  checked:'2026-11-10'
+},
+{
+  id:'sensenova', name:'商汤日日新 SenseNova', region:'国内', type:'限时·活动',
+  site:'https://www.sensenova.cn',
+  quota:'Token Plan 公测 ¥0/月：通用积分池 5 小时 12 万积分 + 每周 120 万积分（滚动窗口）',
+  big:'公测免费（5 小时 12 万 / 周 120 万）', expiry:'公测期，随时可能收费', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'sensenova-6.8-flash', d:'自研，公测期免费，高并发首选'},
+    {n:'deepseek-v4.1-flash / glm-5.2 / kimi-k3', d:'同池可调，但第三方模型易 429'}
+  ],
+  baseUrl:'https://token.sensenova.cn/v1',
+  keyUrl:'https://platform.sensenova.cn/',
+  claim:'注册 → 开通 Token Plan（公测期 ¥0）→ 创建专属 Key（单号最多 20 个）。',
+  limits:[
+    '仅公测期免费，官方原话「当前额度和活动规则属于公测期权益」',
+    '非自研模型高并发容易 429，优先用 sensenova-6.8-flash 并做退避重试'
+  ],
+  sources:[
+    {label:'Token Plan', url:'https://www.sensenova.cn/token-plan'},
+    {label:'平台', url:'https://platform.sensenova.cn/'}
+  ],
+  checked:'2026-11-22'
+},
+{
+  id:'moss', name:'复旦 MOSS（Mosi）', region:'国内', type:'限时·活动',
+  site:'https://www.moss.chat',
+  quota:'nex-n2.6 多模态语言模型官方标「限时免费 0 积分」（实测账单为零）；视觉理解模型限免',
+  big:'限时免费 0 积分', expiry:'限时（无公开截止日）', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'nex-n2.6', d:'文本/图片/视频→文本，限时免费 0 积分'},
+    {n:'moss-vl-1.0', d:'视觉理解，限免'},
+    {n:'moss-vl-realtime-1.0', d:'实时视频理解，限免'}
+  ],
+  baseUrl:'https://api.mosi.cn/v1',
+  keyUrl:'https://platform.moss.cn/app/api-keys/',
+  claim:'注册 MOSS 平台 → 创建 API Key → 直接调用 Chat Completions 接口。',
+  limits:[
+    '限时免费无公开截止日，随时可能恢复计费，别按长期额度排期',
+    'moss-live-1.0 已于 2026-11-18 起收费（¥0.15/分钟），不在免费范围',
+    'nex-n2.6 是推理模型，max_tokens 给太少正文会为空'
+  ],
+  sources:[{label:'MOSS 平台', url:'https://platform.moss.cn/'}],
+  checked:'2026-11-22'
+},
+{
+  id:'mimo', name:'小米 MiMo 开放平台', region:'国内', type:'限时·活动',
+  site:'https://platform.xiaomimimo.com',
+  quota:'TTS 系列限时免费；新用户注册赠金（40 天有效）',
+  big:'限时免费 + 注册赠金', expiry:'赠金 40 天；TTS 限时', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'mimo-v2.5-tts', d:'限时免费'},
+    {n:'mimo-v2.6-pro / flash', d:'语言模型按量计费（¥3/¥6 每百万），靠赠金抵扣'}
+  ],
+  baseUrl:'https://api.xiaomimimo.com/v1',
+  keyUrl:'https://platform.xiaomimimo.com/#/console/api-keys',
+  claim:'注册 → 领取赠金 → 创建 API Key。',
+  limits:['赠金 40 天过期、不可抵 Token Plan 订阅；语言模型免费只覆盖 TTS 与缓存写入'],
+  sources:[{label:'MiMo 平台', url:'https://platform.xiaomimimo.com/'}],
+  checked:'2026-11-22'
+},
+{
+  id:'longcat', name:'美团 LongCat', region:'国内', type:'新人额度',
+  site:'https://longcat.meituan.com',
+  quota:'LongCat-2.0 资源包（1M 上下文，30 天有效）',
+  big:'资源包 / 30 天', expiry:'30 天', onceTokens:0, dailyTokens:0,
+  models:[{n:'LongCat-2.0', d:'1M 上下文，新人资源包'}],
+  baseUrl:'', keyUrl:'',
+  claim:'注册 LongCat 开放平台 → 领取新人资源包 → 创建 API Key（以控制台为准）。',
+  limits:['资源包 30 天有效，到账后尽快用'],
+  sources:[{label:'LongCat', url:'https://longcat.meituan.com'}],
+  checked:'2026-11-22'
+},
+{
+  id:'unisound', name:'云知声 Token Hub', region:'国内', type:'永久免费',
+  site:'https://www.unisound.com',
+  quota:'U Plan Free 档免费领：含 U2-Flash、U2-Med、ASR、TTS、OCR 权益',
+  big:'Free 档免费领', expiry:'套餐有效期内', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'U2-Flash / U2-Med', d:'通用 / 医疗语言模型'},
+    {n:'ASR / TTS / OCR', d:'语音与识别权益'}
+  ],
+  baseUrl:'', keyUrl:'',
+  claim:'注册云知声 → 领取 U Plan Free 档 → 使用套餐专属 Key。',
+  limits:['套餐专属 Key 与按量计费 Key 不互换，仅在套餐有效期内可用'],
+  sources:[{label:'云知声', url:'https://www.unisound.com'}],
+  checked:'2026-11-22'
+},
+{
+  id:'infini', name:'无问芯穹 Infini AI', region:'国内', type:'永久免费',
+  site:'https://www.infini-ai.com',
+  quota:'嵌入 / 重排接口长期免费 + 网页 Playground 全模型免费体验',
+  big:'嵌入/重排长期免费', expiry:'长期', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'embedding / rerank 接口', d:'长期免费'},
+    {n:'Playground 全模型', d:'网页免费体验（非 API）'}
+  ],
+  baseUrl:'', keyUrl:'',
+  claim:'注册 → 控制台创建 Key 调用嵌入 / 重排接口。',
+  limits:['GenStudio 的 API 推理不设试用额度、按量付费；「注册送 200 万 tokens」是旧说法，不予采信'],
+  sources:[{label:'无问芯穹', url:'https://www.infini-ai.com'}],
+  checked:'2026-11-22'
+},
+{
+  id:'gitee-ai', name:'Gitee AI / 模力方舟', region:'国内', type:'待核实',
+  site:'https://ai.gitee.com',
+  quota:'体验访问令牌每用户每天 100 次；正式调用标 0 元的模型需先购买任意金额资源包',
+  big:'100 次 / 天（体验）', expiry:'按日 / 按资源包', onceTokens:0, dailyTokens:0,
+  models:[{n:'广场免费模型', d:'体验与正式 API 是两套权限'}],
+  baseUrl:'https://api.moark.com/v1',
+  keyUrl:'https://ai.gitee.com/',
+  claim:'先在模型广场领取「免费体验访问令牌」；正式 Serverless API 需先购买任意金额全模型资源包。',
+  limits:['体验次数不能当生产配额；正式免费模型名单及规则可变'],
+  sources:[{label:'FAQ', url:'https://ai.gitee.com/docs/FAQ'}],
+  checked:'2026-11-10'
+},
+{
+  id:'ct', name:'中国电信天翼云·息壤智算', region:'国内', type:'新人额度',
+  site:'https://www.ctyun.cn',
+  quota:'实名认证最高 2000 元试用体验金（可抵扣模型调用）',
+  big:'最高 2000 元体验金', expiry:'以活动页为准', onceTokens:0, dailyTokens:0,
+  models:[{n:'息壤智算模型广场', d:'多款国产模型，体验金抵扣'}],
+  baseUrl:'', keyUrl:'',
+  claim:'注册天翼云 → 实名认证 → 领取试用体验金。',
+  limits:['体验金数额与有效期以官方活动页为准'],
+  sources:[{label:'天翼云', url:'https://www.ctyun.cn'}],
+  checked:'2026-11-22'
+},
+{
+  id:'streamlake', name:'StreamLake 快手万擎', region:'国内', type:'新人额度',
+  site:'https://www.streamlake.com',
+  quota:'注册开通后分批送免费调用次数（仅限基础模型推理）',
+  big:'分批赠送调用次数', expiry:'以活动说明为准', onceTokens:0, dailyTokens:0,
+  models:[{n:'基础模型推理', d:'免费次数分批发放（初识 / 探索 / 首金礼包）'}],
+  baseUrl:'', keyUrl:'',
+  claim:'注册 StreamLake → 开通 → 按活动说明分批领取免费调用次数。',
+  limits:[
+    '仅限基础模型推理，不可抵扣 Batch 批量推理',
+    '「Air 永久免费」「Pro 送 2000 万 tokens」均无官方依据，别信旧清单'
+  ],
+  sources:[{label:'StreamLake', url:'https://www.streamlake.com'}],
+  checked:'2026-11-22'
+},
+{
+  id:'minimax', name:'MiniMax 开放平台', region:'国内', type:'待核实',
+  site:'https://www.minimaxi.com',
+  quota:'M Plan 订阅 / 积分包方式接入 API；暂无公开的长期免费层，免费以活动为准',
+  big:'以活动为准', expiry:'待核实', onceTokens:0, dailyTokens:0,
+  models:[{n:'M3.1 Flash Preview', d:'免费以活动 / 套餐为准'}, {n:'MiniMax-M3', d:'旗舰，按量为主'}],
+  baseUrl:'https://api.minimax.chat/v1',
+  keyUrl:'https://platform.minimax.cn/console/access?tab=api-keys',
+  claim:'注册控制台 → 创建 API Key → 调用前先看定价页当日活动。',
+  limits:['没有公开的永久免费层，接入前务必核对定价页'],
+  sources:[{label:'MiniMax 平台', url:'https://platform.minimax.cn/'}],
+  checked:'2026-11-22'
+},
+/* ---------- 海外（可选，国内直连不稳） ---------- */
+{
+  id:'gemini', name:'Google AI Studio / Gemini', region:'海外', type:'永久免费',
+  site:'https://aistudio.google.com',
+  quota:'Free Tier 覆盖 Gemini Flash 系列，按 RPM/RPD 限流、每日滚动重置（具体数值仅在 AI Studio 内显示）',
+  big:'Free Tier 免费层', expiry:'长期（按日刷新）', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'gemini-3.8-flash / 3.5-flash', d:'免费层覆盖'},
+    {n:'gemini-2.5-flash', d:'免费层覆盖'}
+  ],
+  baseUrl:'https://generativelanguage.googleapis.com/v1beta/openai/',
+  keyUrl:'https://aistudio.google.com/apikey',
+  claim:'支持地区注册 → 创建 API Key → 保持 Free Tier。',
+  limits:['国内访问不稳；免费层输入输出可能用于模型改进，别喂敏感数据'],
+  sources:[
+    {label:'Billing', url:'https://ai.google.dev/gemini-api/docs/billing'},
+    {label:'Rate limits', url:'https://ai.google.dev/gemini-api/docs/rate-limits'}
+  ],
+  checked:'2026-11-10'
+},
+{
+  id:'groq', name:'GroqCloud', region:'海外', type:'永久免费',
+  site:'https://groq.com',
+  quota:'Free Plan：如 gpt-oss-120b 为 30 RPM / 1000 RPD / 8K TPM（约 20 万 tokens/天）',
+  big:'≈20 万 tokens / 天', expiry:'长期（按日限流）', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'openai/gpt-oss-120b', d:'30 RPM / 1000 RPD / 8K TPM'},
+    {n:'openai/gpt-oss-20b', d:'同档限流'}
+  ],
+  baseUrl:'https://api.groq.com/openai/v1',
+  keyUrl:'https://console.groq.com/keys',
+  claim:'邮箱注册 → 创建 Key → 在组织 Limits 页核对目标模型限额。',
+  limits:['免费层不在定价页，限额看速率文档；旧 Llama 模型已转付费'],
+  sources:[
+    {label:'GroqCloud', url:'https://groq.com/groqcloud'},
+    {label:'限流', url:'https://console.groq.com/docs/rate-limits'}
+  ],
+  checked:'2026-11-10'
+},
+{
+  id:'openrouter', name:'OpenRouter', region:'海外', type:'永久免费',
+  site:'https://openrouter.ai',
+  quota:'带 :free 后缀的模型免费：约 20 RPM / 50 RPD（充值 $10 可升到 1000 RPD）',
+  big:':free 模型免费', expiry:'长期（按日限流）', onceTokens:0, dailyTokens:0,
+  models:[
+    {n:'google/gemma-4-31b-it:free', d:'免费路由'},
+    {n:'nvidia/nemotron-3-super-120b:free', d:'免费路由'},
+    {n:'…25+ 款 :free 模型', d:'选带 :free 后缀的'}
+  ],
+  baseUrl:'https://openrouter.ai/api/v1',
+  keyUrl:'https://openrouter.ai/keys',
+  claim:'邮箱注册 → 创建 Key → 模型名必须带 :free 后缀。',
+  limits:['只有 :free 后缀免费，同名付费模型照常扣费；余额为负可能影响调用'],
+  sources:[
+    {label:'官网', url:'https://openrouter.ai/'},
+    {label:':free 说明', url:'https://openrouter.ai/docs/guides/routing/model-variants/free'}
+  ],
+  checked:'2026-11-10'
+}
+];
+
+/* =========================================================
+   状态与工具
+   ========================================================= */
+let DATA = SEED.map(e => Object.assign({}, e, {
+  models: e.models.slice(), limits: e.limits.slice(), sources: e.sources.slice(), online: null
+}));
+
+const state = { q:'', type:'全部', region:'全部' };
+const TYPE_BADGE = { '永久免费':'b-free', '新人额度':'b-once', '每日重置':'b-daily', '限时·活动':'b-limited', '待核实':'b-unknown', '有条件':'b-unknown' };
+const TYPES = ['全部','永久免费','新人额度','每日重置','限时·活动','待核实'];
+const REGIONS = ['全部','国内','海外'];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s||'').toLowerCase().replace(/[\s()（）·._\-/]/g,'');
+
+function fmtTokens(n){
+  if(!n) return '';
+  if(n >= 1e8) return (n/1e8).toFixed(n % 1e8 === 0 ? 0 : 2) + ' 亿';
+  if(n >= 1e4) return (n/1e4).toFixed(n % 1e4 === 0 ? 0 : 1) + ' 万';
+  return String(n);
+}
+
+/* =========================================================
+   统计
+   ========================================================= */
+function renderStats(){
+  const once = DATA.reduce((s,e)=> s + (e.onceTokens||0), 0);
+  const daily = DATA.reduce((s,e)=> s + (e.dailyTokens||0), 0);
+  const models = DATA.reduce((s,e)=> s + e.models.length, 0);
+  const domestic = DATA.filter(e=>e.region==='国内').length;
+  $('#stats').innerHTML = [
+    {v: DATA.length + ' 个', l:'收录平台（国内 '+domestic+'）'},
+    {v: models + ' 款', l:'标注的免费模型'},
+    {v: '≈' + fmtTokens(once), l:'一次性可领 tokens 合计'},
+    {v: daily ? '≈' + fmtTokens(daily) + '/天' : '—', l:'每日重置 tokens 合计'}
+  ].map(s=>`<div class="stat"><b>${esc(s.v)}</b><span>${esc(s.l)}</span></div>`).join('');
+}
+
+/* =========================================================
+   列表渲染
+   ========================================================= */
+function matches(e){
+  if(state.type !== '全部' && e.type !== state.type) return false;
+  if(state.region !== '全部' && e.region !== state.region) return false;
+  if(state.q){
+    const hay = norm([e.name, e.quota, e.type, e.region,
+      e.models.map(m=>m.n).join(' '), e.baseUrl].join(' '));
+    if(!hay.includes(norm(state.q))) return false;
+  }
+  return true;
+}
+
+function cardHTML(e){
+  const badge = `<span class="badge ${TYPE_BADGE[e.type]||'b-unknown'}">${esc(e.type)}</span>`;
+  const models = e.models.slice(0,4).map(m=>`<span class="m" title="${esc(m.d)}">${esc(m.n)}</span>`).join('')
+    + (e.models.length>4 ? `<span class="m more">+${e.models.length-4}</span>` : '');
+  const big = e.big ? `<span class="big">💰 ${esc(e.big)}</span>` : '';
+  const online = e.online ? `<span class="online-flag">✔ 联网已核对 ${esc(e.online.date||'')}</span>` : '';
+  return `<article class="card">
+    <div class="card-top">
+      <span class="name">${esc(e.name)}</span>${badge}
+      <span class="badge b-region">${esc(e.region)}</span>
+    </div>
+    <div class="quota">${big}${esc(e.quota)}</div>
+    <div class="models">${models}</div>
+    <div class="expiry">⏳ 有效期：<b>${esc(e.expiry)}</b></div>
+    <div>${online}</div>
+    <div class="actions">
+      <a class="btn" href="${esc(e.site||'#')}" target="_blank" rel="noopener">🌐 官网</a>
+      <button class="btn primary" data-open="${esc(e.id)}">查看详情 →</button>
+    </div>
+  </article>`;
+}
+
+function renderList(){
+  const list = DATA.filter(matches);
+  $('#grid').innerHTML = list.map(cardHTML).join('');
+  $('#empty').style.display = list.length ? 'none' : 'block';
+  document.querySelectorAll('[data-open]').forEach(b=>{
+    b.onclick = () => { location.hash = '#/p/' + b.dataset.open; };
+  });
+}
+
+function renderChips(){
+  $('#type-chips').innerHTML = TYPES.map(t=>
+    `<span class="chip ${state.type===t?'on':''}" data-type="${esc(t)}">${esc(t)}</span>`).join('')
+    + `<span class="sep"></span><span class="chip" id="clear-filter" title="清空筛选">✕ 清空</span>`;
+  $('#region-chips').innerHTML = REGIONS.map(r=>
+    `<span class="chip ${state.region===r?'on':''}" data-region="${esc(r)}">${esc(r==='全部'?'全部地区':r)}</span>`).join('');
+  document.querySelectorAll('[data-type]').forEach(c=> c.onclick = ()=>{ state.type=c.dataset.type; renderChips(); renderList(); });
+  document.querySelectorAll('[data-region]').forEach(c=> c.onclick = ()=>{ state.region=c.dataset.region; renderChips(); renderList(); });
+  $('#clear-filter').onclick = ()=>{ state.type='全部'; state.region='全部'; state.q=''; $('#search').value=''; renderChips(); renderList(); };
+}
+
+/* =========================================================
+   详情页（hash 路由：#/p/<id>）
+   ========================================================= */
+function renderDetail(id){
+  const e = DATA.find(x=>x.id===id);
+  if(!e){ location.hash = '#/'; return; }
+  const badge = `<span class="badge ${TYPE_BADGE[e.type]||'b-unknown'}">${esc(e.type)}</span>
+    <span class="badge b-region">${esc(e.region)}</span>`;
+  const modelRows = e.models.length
+    ? e.models.map(m=>`<tr><td class="mono">${esc(m.n)}</td><td>${esc(m.d)}</td></tr>`).join('')
+    : `<tr><td colspan="2" style="color:var(--muted)">以官方控制台模型列表为准</td></tr>`;
+  const baseUrl = e.baseUrl
+    ? `<td class="mono" id="baseurl">${esc(e.baseUrl)}<button class="copy" data-copy="${esc(e.baseUrl)}">复制</button></td>`
+    : `<td style="color:var(--muted)">以控制台为准（情报源未提供）</td>`;
+  const keyBtn = e.keyUrl
+    ? `<a class="btn primary" href="${esc(e.keyUrl)}" target="_blank" rel="noopener">🔑 申请 API Key</a>` : '';
+  const limitItems = e.limits.map(l=>`<li class="warn">⚠ ${esc(l)}</li>`).join('');
+  const sourceLinks = e.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)} ↗</a>`).join('');
+  let verify = '';
+  if(e.online){
+    const v = e.online.verify;
+    const st = v && v.status==='documented' ? '<b class="ok">文档事实已确认</b>'
+      : v && v.status==='partial' ? '<b class="ok">部分核实</b>'
+      : v && v.status==='unverified' ? '<b class="no">核心权益待核实</b>' : '';
+    verify = `<div class="verify">
+      📡 联网核对：来源「${esc(e.online.source)}」· 最后检查 <b>${esc(e.online.date||'未知')}</b> · ${st}
+      ${v && v.scope ? `<br>范围：${esc(v.scope)}` : ''}
+      ${v && v.pending && v.pending.length ? `<br>待核实：${esc(v.pending.join('；'))}` : ''}
+      ${e.online.offer ? `<br>在线口径：${esc(e.online.offer)}` : ''}
+    </div>`;
+  } else {
+    verify = `<div class="verify">📡 本条为内置数据（整理于 ${esc(e.checked)}），点顶部「联网查询」可拉取最新官方口径。</div>`;
+  }
+
+  $('#detail').innerHTML = `
+    <div class="d-head">
+      <div style="flex:1;min-width:260px">
+        <div class="d-badges">${badge}</div>
+        <h2>${esc(e.name)}</h2>
+        <div class="d-quota">💰 <b>${esc(e.big || '见下方说明')}</b>　·　${esc(e.quota)}</div>
+        <div class="expiry" style="margin-top:6px">⏳ 有效期：<b>${esc(e.expiry)}</b>　　🔍 数据核对于 ${esc(e.checked)}</div>
+      </div>
+      <div class="d-actions">
+        <a class="btn" href="${esc(e.site||'#')}" target="_blank" rel="noopener">🌐 官网</a>
+        ${keyBtn}
+        <button class="btn ghost" id="back-btn">← 返回列表</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>🧩 可用模型清单（标注额度说明）</h3>
+      <table><thead><tr><th style="width:38%">模型</th><th>免费额度 / 说明</th></tr></thead>
+      <tbody>${modelRows}</tbody></table>
+    </div>
+
+    <div class="sec">
+      <h3>🔌 API 接入（OpenAI 兼容）</h3>
+      <dl class="kv">
+        <dt>Base URL</dt>${baseUrl}
+        <dt>申请 Key</dt>${e.keyUrl ? `<dd><a href="${esc(e.keyUrl)}" target="_blank" rel="noopener">${esc(e.keyUrl)}</a></dd>` : '<dd>以控制台为准</dd>'}
+        <dt>兼容性</dt><dd>支持 OpenAI SDK / 各类客户端，只改 <code>base_url</code> 与 <code>api_key</code> 即可切换</dd>
+      </dl>
+    </div>
+
+    <div class="sec">
+      <h3>🎁 领取步骤</h3>
+      <ul class="tight"><li>${esc(e.claim)}</li></ul>
+    </div>
+
+    <div class="sec">
+      <h3>⚠️ 限制与避坑</h3>
+      <ul class="tight">${limitItems || '<li style="color:var(--muted)">暂无特别限制，仍建议以官方页为准</li>'}</ul>
+    </div>
+
+    <div class="sec">
+      <h3>🔗 来源与核验</h3>
+      <div class="srcs">${sourceLinks || '<span style="color:var(--muted);font-size:13px">暂无外部来源</span>'}</div>
+      ${verify}
+    </div>`;
+
+  $('#back-btn').onclick = ()=>{ history.length > 1 ? history.back() : (location.hash = '#/'); };
+  document.querySelectorAll('[data-copy]').forEach(b=>{
+    b.onclick = async ()=>{
+      try{ await navigator.clipboard.writeText(b.dataset.copy); b.textContent='✅ 已复制'; }
+      catch(_){ b.textContent='复制失败，请手动选中'; }
+      setTimeout(()=>{ b.textContent='复制'; }, 1600);
+    };
+  });
+  window.scrollTo({top:0});
+}
+
+function route(){
+  const m = location.hash.match(/^#\/p\/(.+)$/);
+  if(m){
+    $('#list').classList.add('hide');
+    $('#detail').classList.add('show');
+    renderDetail(decodeURIComponent(m[1]));
+  }else{
+    $('#list').classList.remove('hide');
+    $('#detail').classList.remove('show');
+    renderList();
+  }
+}
+
+/* =========================================================
+   联网查询（GitHub Raw，支持跨域）
+   ========================================================= */
+const SRC_JSON = 'https://raw.githubusercontent.com/Tkkdy/Free-AI-API-List/main/data/platforms.json';
+const SRC_MD   = 'https://raw.githubusercontent.com/rockbenben/free-llm-intel/main/README.md';
+
+const DOMESTIC_IDS = new Set(['siliconflow','sensenova','modelscope','bigmodel','aliyun','baidu','spark','gitee-ai','deepseek','kimi','minimax','qiniu','ark','hunyuan','moss','mimo','longcat','unisound','infini','ct','streamlake','ctyun','bai']);
+const DOMESTIC_KW = /智谱|阿里|通义|百炼|百度|文心|讯飞|魔搭|商汤|七牛|火山|豆包|混元|腾讯|kimi|月之暗面|minimax|deepseek|小米|美团|无问|云知声|天翼|快手|电信|gitee|模力方舟|魔搭|复旦|mos/i;
+const ALIAS = { '通义千问':'aliyun','智谱glm':'bigmodel','智谱':'bigmodel','kimi':'kimi','minimax':'minimax','小米mimo':'mimo',
+  '文心ernie':'baidu','百度千帆':'baidu','硅基流动':'siliconflow','复旦moss':'moss','七牛云conatus':'qiniu',
+  '七牛云':'qiniu','modelscope魔搭社区':'modelscope','魔搭':'modelscope','googlegemini':'gemini','gemini':'gemini',
+  'groqcloud':'groq','groq':'groq','openrouter':'openrouter','讯飞星火spark':'spark','讯飞星火':'spark',
+  '阿里云百炼modelstudio':'aliyun','火山引擎火山方舟豆包':'ark','腾讯混元tokenhub':'hunyuan','商汤日日新sensenova':'sensenova' };
+
+function guessRegion(id, name){
+  if(DOMESTIC_IDS.has(id)) return '国内';
+  if(DOMESTIC_KW.test(name)) return '国内';
+  return '海外';
+}
+function mapCat(c){
+  return ({free_tier:'永久免费', trial:'新人额度', unverified:'待核实', conditional:'待核实'})[c] || '待核实';
+}
+function officialUrl(p){
+  if(!p.sources || !p.sources.length) return '';
+  const hit = p.sources.find(s=>/官网|官方|主页|国内云|平台|社区|开放/.test(s.label||''));
+  return (hit || p.sources[0]).url || '';
+}
+function findSeed(id, name){
+  let e = DATA.find(x=>x.id===id);
+  if(e) return e;
+  const n = norm(name);
+  e = DATA.find(x=> norm(x.name)===n || (n && (norm(x.name).includes(n) || n.includes(norm(x.name)))) );
+  if(e) return e;
+  const a = ALIAS[n];
+  if(a) return DATA.find(x=>x.id===a) || null;
+  return null;
+}
+
+/* 数据源 1：Free-AI-API-List 平台 JSON */
+function mergePlatformsJson(j){
+  if(!j || !Array.isArray(j.platforms)) return 0;
+  let touched = 0;
+  const skipCat = new Set(['gateway','non_free_reference','retired']);
+  for(const p of j.platforms){
+    if(skipCat.has(p.category)) continue;
+    const seed = findSeed(p.id, p.name);
+    if(seed){
+      seed.online = {
+        source:'Free-AI-API-List', date:(p.verification && p.verification.last_checked_at) || j.updated_at || '',
+        offer:p.offer, verify:p.verification
+      };
+      if(!seed.baseUrl && p.api_base_urls && p.api_base_urls[0]) seed.baseUrl = p.api_base_urls[0];
+      if(p.sources && p.sources.length && !seed.sources.length) seed.sources = p.sources.map(s=>({label:s.label,url:s.url}));
+      touched++;
+    }else{
+      const srcs = (p.sources||[]).map(s=>({label:s.label,url:s.url}));
+      const site = officialUrl(p);
+      DATA.push({
+        id:p.id, name:p.name, region:guessRegion(p.id,p.name), type:mapCat(p.category),
+        site:site, quota:p.offer||'', big:'', expiry:p.validity||'以官方为准',
+        onceTokens:0, dailyTokens:0,
+        models:[], baseUrl:(p.api_base_urls&&p.api_base_urls[0])||'', keyUrl:site,
+        claim:p.claim_steps||'', limits:[p.requirements,p.cautions].filter(Boolean),
+        sources:srcs, checked:(p.verification&&p.verification.last_checked_at)||j.updated_at||'',
+        online:{source:'Free-AI-API-List', date:(p.verification&&p.verification.last_checked_at)||j.updated_at||'',
+                offer:p.offer, verify:p.verification}
+      });
+      touched++;
+    }
+  }
+  return touched;
+}
+
+/* 数据源 2：free-llm-intel README 的「一键接入」表 */
+function mergeIntelReadme(md){
+  let touched = 0;
+  const lines = md.split('\n');
+  for(const line of lines){
+    if(!/^\|\s*\*\*/.test(line)) continue;
+    const cells = line.split('|');
+    if(cells.length < 7) continue;
+    const nameRaw = (cells[1]||'').trim();
+    const m = nameRaw.match(/^\*\*(.+?)\*\*$/);
+    if(!m) continue;
+    const name = m[1].trim();
+    if(/^[A-D]\.\s/.test(name)) continue;              // 跳过分类标题行
+    const quota = (cells[2]||'').trim();
+    const keyM = (cells[3]||'').match(/\((https?:[^)]+)\)/);
+    const baseM = (cells[4]||'').match(/`([^`]+)`/);
+    const modelsM = (cells[5]||'').match(/`([^`]+)`/);
+    if(!quota || !baseM) continue;
+    const keyUrl = keyM ? keyM[1] : '';
+    const baseUrl = baseM[1];
+    const modelNames = ((cells[5]||'').match(/`([^`]+)`/g)||[]).map(s=>s.replace(/`/g,'')).slice(0,6);
+
+    const seed = findSeed('', name);
+    if(seed){
+      if(!seed.baseUrl) seed.baseUrl = baseUrl;
+      if(!seed.keyUrl && keyUrl) seed.keyUrl = keyUrl;
+      if(!seed.models.length && modelNames.length){
+        seed.models = modelNames.map(n=>({n:n, d:'来自 free-llm-intel 推荐'}));
+      }
+      if(!seed.quota) seed.quota = quota;
+      if(!seed.online) seed.online = {source:'free-llm-intel', date:'', offer:quota, verify:null};
+      touched++;
+    }else{
+      const n = norm(name);
+      if(DATA.some(x=> norm(x.name)===n)) continue;
+      const site = keyUrl ? keyUrl.split('/').slice(0,3).join('/') : '';
+      DATA.push({
+        id:'intel-'+n, name:name, region:guessRegion(n,name), type:'待核实',
+        site:site, quota:quota, big:'', expiry:'以官方页为准',
+        onceTokens:0, dailyTokens:0,
+        models:modelNames.map(x=>({n:x, d:'来自 free-llm-intel 推荐'})),
+        baseUrl:baseUrl, keyUrl:keyUrl, claim:'见官网控制台申请入口。',
+        limits:['由在线数据源补充，额度与政策请以官方页为准'],
+        sources: site?[{label:'官网',url:site}]:[], checked:'',
+        online:{source:'free-llm-intel', date:'', offer:quota, verify:null}
+      });
+      touched++;
+    }
+  }
+  return touched;
+}
+
+function setStatus(kind, text){
+  const bar = $('#statusbar');
+  bar.className = 'statusbar ' + kind;
+  $('#status-text').textContent = text;
+}
+
+async function onlineRefresh(){
+  setStatus('loading', '正在联网查询…（拉取 2 个开源数据源）');
+  const ok = [], fail = [];
+
+  try{
+    const r = await fetch(SRC_JSON, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const n = mergePlatformsJson(j);
+    ok.push(`Free-AI-API-List（${j.updated_at||'日期未知'}，更新 ${n} 条）`);
+  }catch(err){ fail.push('Free-AI-API-List：' + err.message); }
+
+  try{
+    const r = await fetch(SRC_MD, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const md = await r.text();
+    const n = mergeIntelReadme(md);
+    ok.push(`free-llm-intel（更新 ${n} 条）`);
+  }catch(err){ fail.push('free-llm-intel：' + err.message); }
+
+  renderStats();
+  route();
+
+  if(ok.length && !fail.length) setStatus('ok', `✅ 联网查询完成 · ${ok.join(' · ')} · 本地缓存于 ${new Date().toLocaleString('zh-CN')}`);
+  else if(ok.length) setStatus('ok', `⚠️ 部分成功：${ok.join(' · ')}；失败 → ${fail.join('；')}`);
+  else setStatus('err', `❌ 联网失败（${fail.join('；')}），当前显示内置数据（2026-11-22 整理）`);
+}
+
+/* =========================================================
+   初始化
+   ========================================================= */
+$('#search').addEventListener('input', e => { state.q = e.target.value; renderList(); });
+$('#refresh-btn').addEventListener('click', onlineRefresh);
+window.addEventListener('hashchange', route);
+
+renderStats();
+renderChips();
+route();
+onlineRefresh();   // 打开页面即自动联网查询一次，失败自动回退内置数据
+</script>
+</body>
+</html>
